@@ -41,5 +41,5 @@ object AnimationTokens {
 object AnimationCurves {
     val Standard = androidx.compose.animation.core.CubicEaseOut
     val Emphatic = androidx.compose.animation.core.CubicEaseInOut
-    val Soft = androidx.compose.animation.core.SpringSpec(dampingRatio = 0.8f)
+    val Soft = androidx.compose.animation.core.SpringSpec<Float>(dampingRatio = 0.8f)
 }

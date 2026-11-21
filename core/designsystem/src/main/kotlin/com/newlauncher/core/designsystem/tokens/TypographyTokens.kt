@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.sp
  */
 object TypographyTokens {
     val Caption = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, lineHeight = 14.sp)
-    val Footnote = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Regular, lineHeight = 16.sp)
-    val Body = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Regular, lineHeight = 20.sp)
+    val Footnote = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Normal, lineHeight = 16.sp)
+    val Body = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 20.sp)
     val BodyStrong = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp)
     val Subhead = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, lineHeight = 22.sp)
     val Title = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold, lineHeight = 26.sp)
@@ -30,7 +30,7 @@ object TypographyTokens {
 
 /** Layer 1 — font-weight aliases for convenience. */
 object FontWeights {
-    val Regular = FontWeight.Regular
+    val Regular = FontWeight.Normal
     val Medium = FontWeight.Medium
     val SemiBold = FontWeight.SemiBold
     val Bold = FontWeight.Bold
