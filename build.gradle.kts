@@ -13,8 +13,11 @@ plugins {
 }
 
 subprojects {
+    // Application module SDK/Java convention. We configure the AGP DSL
+    // interface types (which expose compileSdk / defaultConfig) rather than
+    // the raw extension classes.
     plugins.withId("com.android.application") {
-        extensions.configure<com.android.build.gradle.AppModuleExtension>("android") {
+        extensions.configure<com.android.build.api.dsl.ApplicationExtension>("android") {
             compileSdk = 35
 
             defaultConfig {
@@ -29,8 +32,9 @@ subprojects {
         }
     }
 
+    // Library module SDK/Java convention.
     plugins.withId("com.android.library") {
-        extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
+        extensions.configure<com.android.build.api.dsl.LibraryExtension>("android") {
             compileSdk = 35
 
             defaultConfig {
@@ -45,6 +49,7 @@ subprojects {
         }
     }
 
+    // Kotlin jvmTarget 17 for every Android module.
     plugins.withId("org.jetbrains.kotlin.android") {
         extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension>("kotlin") {
             compilerOptions {
