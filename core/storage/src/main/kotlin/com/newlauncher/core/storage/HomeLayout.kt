@@ -41,7 +41,9 @@ data class HomeCell(
     val label: String,
     val col: Int = 0,
     val row: Int = 0,
-)
+) {
+    val key: String get() = "$packageName/$className"
+}
 
 /** A dock slot. */
 @Serializable
