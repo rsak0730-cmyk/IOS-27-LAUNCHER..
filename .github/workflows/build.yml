@@ -53,13 +53,17 @@ jobs:
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             echo "::error::Gradle assembleDebug failed with exit code $status"
-            # Emit a single consolidated annotation with critical error context
-            critical=$(grep -nE "What went wrong|Caused by:|FAILURE:|> Task.*FAILED|BUILD FAILED" build.log | tail -n 8)
-            if [ -n "$critical" ]; then
-              echo "::error::CRITICAL: $critical"
+            # Emit compiler errors first
+            errors=$(grep -E "^e: " build.log | head -n 15 | tr '\n' '|')
+            if [ -n "$errors" ]; then
+              echo "::error::COMPILER: $errors"
             else
-              echo "::error::CRITICAL: No What went wrong found — last 10 lines:"
-              tail -n 10 build.log | tr '\n' '|'
+              echo "::error::COMPILER: (no ^e: lines — checking What went wrong)"
+            fi
+            # Emit failed tasks
+            tasks=$(grep -E "> Task.*FAILED|What went wrong|Caused by:" build.log | tail -n 5 | tr '\n' '|')
+            if [ -n "$tasks" ]; then
+              echo "::error::TASKS: $tasks"
             fi
           fi
           exit "$status"
