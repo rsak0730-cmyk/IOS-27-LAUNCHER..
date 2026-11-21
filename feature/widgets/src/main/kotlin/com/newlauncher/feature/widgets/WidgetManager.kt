@@ -39,7 +39,7 @@ class WidgetManager(private val context: Context) {
 
     /** Get the provider info for a [ComponentName], or null. */
     fun getProviderInfo(component: ComponentName): AppWidgetProviderInfo? =
-        appWidgetManager.getProviderInfo(component, 0)
+        appWidgetManager.installedProviders.firstOrNull { it.provider == component }
 
     /**
      * Bind an allocated [appWidgetId] to [provider] so the host can render it.
@@ -47,14 +47,15 @@ class WidgetManager(private val context: Context) {
      */
     fun bind(appWidgetId: Int, provider: ComponentName): Boolean =
         runCatching {
-            appWidgetManager.bindAppWidgetIdIfAllowed(provider, appWidgetId)
+            appWidgetManager.bindAppWidgetIdIfAllowed(appWidgetId, provider)
         }.getOrDefault(false)
 
     /** Launch the provider's configuration activity, if it has one. */
     fun configure(appWidgetId: Int, provider: ComponentName): Boolean {
         val info = getProviderInfo(provider) ?: return false
         val configure = info.configure ?: return false
-        val intent = Intent(configure).apply {
+        val intent = Intent().apply {
+            component = configure
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }

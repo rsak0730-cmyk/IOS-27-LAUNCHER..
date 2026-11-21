@@ -2,8 +2,8 @@ package com.newlauncher.feature.widgets
 
 import android.appwidget.AppWidgetHost
 import android.appwidget.AppWidgetHostView
+import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import com.newlauncher.core.common.Log
 import com.newlauncher.core.storage.WidgetPlacement
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -100,26 +100,20 @@ class WidgetHostController(
     /**
      * Create (or refresh) the [AppWidgetHostView] for [appWidgetId].
      */
-    fun createHostView(context: Context, appWidgetId: Int): AppWidgetHostView? {
+    fun createHostView(context: Context, appWidgetId: Int, provider: ComponentName): AppWidgetHostView? {
         return runCatching {
-            appWidgetHost.createView(
-                context,
-                appWidgetId,
-                intentFor(appWidgetId),
-            )
+            val info = widgetManager.getProviderInfo(provider) ?: return@runCatching null
+            appWidgetHost.createView(context, appWidgetId, info)
         }.onFailure { Log.e(tag, "Failed to create host view for $appWidgetId", it) }
             .getOrNull()
     }
 
-    private fun intentFor(appWidgetId: Int): Intent =
-        Intent().putExtra(android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-
-    private fun String.toComponentName(): android.content.ComponentName {
+    private fun String.toComponentName(): ComponentName {
         val idx = this.indexOf('/')
         return if (idx > 0) {
-            android.content.ComponentName(this.substring(0, idx), this.substring(idx + 1))
+            ComponentName(this.substring(0, idx), this.substring(idx + 1))
         } else {
-            android.content.ComponentName(this, this)
+            ComponentName(this, this)
         }
     }
 

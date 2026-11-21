@@ -1,6 +1,7 @@
 package com.newlauncher.feature.widgets
 
 import android.appwidget.AppWidgetHostView
+import android.content.ComponentName
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.foundation.Image
@@ -93,7 +94,11 @@ private fun WidgetRow(
                     container.removeViewAt(i)
                 }
                 val hostView: AppWidgetHostView? =
-                    controller.createHostView(container.context, placement.appWidgetId)
+                    controller.createHostView(
+                        container.context,
+                        placement.appWidgetId,
+                        ComponentName(placement.packageName, placement.providerName),
+                    )
                 if (hostView != null) {
                     container.addView(hostView)
                 }
