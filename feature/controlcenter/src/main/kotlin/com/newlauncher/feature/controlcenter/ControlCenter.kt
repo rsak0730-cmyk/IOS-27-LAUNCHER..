@@ -10,9 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Remove
-import androidx.compose.material.icons.automirrored.filled.Settings
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BrightnessHigh
 import androidx.compose.material.icons.filled.FlashlightOn
@@ -101,7 +101,7 @@ fun ControlCenter(
                     onClick = { viewModel.openSettings(android.provider.Settings.ACTION_APPLICATION_SETTINGS) },
                 )
                 ActionTile(
-                    icon = Icons.AutoMirrored.Filled.Settings,
+                    icon = Icons.Filled.Settings,
                     label = "Settings",
                     onClick = { viewModel.openSettings(android.provider.Settings.ACTION_SETTINGS) },
                 )

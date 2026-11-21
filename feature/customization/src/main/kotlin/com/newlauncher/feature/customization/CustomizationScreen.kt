@@ -27,7 +27,6 @@ import com.newlauncher.core.designsystem.tokens.SpacingTokens
 import com.newlauncher.core.glassengine.GlassSurface
 import com.newlauncher.core.performance.GraphicsProfile
 import com.newlauncher.core.storage.LauncherSettings
-import kotlin.ranges.FloatRange
 
 /**
  * The customization screen. Every control edits [LauncherSettings] through
@@ -233,7 +232,7 @@ private fun ProfilePicker(
 private fun SliderSetting(
     label: String,
     value: Float,
-    range: FloatRange,
+    range: ClosedFloatingPointRange<Float>,
     onChange: (Float) -> Unit,
     stepCount: Int = 0,
     format: (Float) -> String = { "${(it * 100).toInt()}%" },
