@@ -1,11 +1,13 @@
 package com.newlauncher.app
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.wallpapermanager.WallpaperManager
+import android.app.WallpaperManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -73,6 +75,10 @@ class LauncherActivity : ComponentActivity() {
             }
         }
 
+    private val wallpaperRequest = PickVisualMediaRequest(
+        ActivityResultContracts.PickVisualMedia.ImageOnly
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -90,7 +96,7 @@ class LauncherActivity : ComponentActivity() {
                 islandVm = islandVm,
                 controlVm = controlVm,
                 customVm = customVm,
-                onPickWallpaper = { wallpaperPicker.launch(null) },
+                onPickWallpaper = { wallpaperPicker.launch(wallpaperRequest) },
             )
         }
 
@@ -107,15 +113,17 @@ class LauncherActivity : ComponentActivity() {
 
     private fun setWallpaperFromUri(uri: android.net.Uri) {
         val context = applicationContext
-        runCatching {
-            val bitmap: Bitmap? = context.contentResolver.openInputStream(uri)?.use { input ->
-                Bitmap.Factory.decodeStream(input)
-            }
-            if (bitmap != null) {
-                WallpaperManager.getInstance(context).setBitmap(bitmap, null, true)
-            }
-            container.repository.updateSettings { it.copy(wallpaperUri = uri.toString()) }
-        }.onFailure { Log.e(Log.tag("Launcher"), "Failed to set wallpaper", it) }
+        scope.launch {
+            runCatching {
+                val bitmap: Bitmap? = context.contentResolver.openInputStream(uri)?.use { input ->
+                    BitmapFactory.decodeStream(input)
+                }
+                if (bitmap != null) {
+                    WallpaperManager.getInstance(context).setBitmap(bitmap, null, true)
+                }
+                container.repository.updateSettings { it.copy(wallpaperUri = uri.toString()) }
+            }.onFailure { Log.e(Log.tag("Launcher"), "Failed to set wallpaper", it) }
+        }
     }
 }
 

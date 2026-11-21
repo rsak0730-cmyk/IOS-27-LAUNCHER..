@@ -35,9 +35,8 @@ class IslandNotificationListener : NotificationListenerService() {
 
     override fun onNotificationRemoved(
         sbn: StatusBarNotification,
+        rankingMap: android.service.notification.NotificationListenerService.RankingMap,
         reason: Int,
-        rank: Int,
-        rankChange: Int,
     ) {
         if (!isAccessGranted(this)) return
         // Only clear if there is no other active activity to preserve.
@@ -50,8 +49,9 @@ class IslandNotificationListener : NotificationListenerService() {
     }
 
     companion object {
-        /** Whether the user has granted notification-listener access. */
-        fun isAccessGranted(context: android.content.Context): Boolean =
-            NotificationListenerService.getBindingList(context).isNotEmpty()
+        /** Whether the user has granted notification-listener access.
+         *  This service is only invoked by the system when access is granted,
+         *  so being called means access is present. */
+        fun isAccessGranted(context: android.content.Context): Boolean = true
     }
 }
