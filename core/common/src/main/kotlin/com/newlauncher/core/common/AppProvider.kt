@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
-import android.util.Log
 
 /**
  * Discovers and launches installed applications using Android's standard
