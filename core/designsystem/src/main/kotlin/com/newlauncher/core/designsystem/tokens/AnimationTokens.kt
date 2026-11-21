@@ -39,7 +39,7 @@ object AnimationTokens {
 
 /** Curve aliases for readability. */
 object AnimationCurves {
-    val Standard = androidx.compose.animation.core.CubicEaseOut
-    val Emphatic = androidx.compose.animation.core.CubicEaseInOut
+    val Standard = androidx.compose.animation.core.FastOutSlowInEasing
+    val Emphatic = androidx.compose.animation.core.EaseInOut
     val Soft = androidx.compose.animation.core.SpringSpec<Float>(dampingRatio = 0.8f)
 }
