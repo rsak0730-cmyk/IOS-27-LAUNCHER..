@@ -66,12 +66,13 @@ class WidgetManager(private val context: Context) {
      * Request an updated [RemoteViews] for a bound widget (e.g. after resize).
      */
     fun requestUpdate(appWidgetId: Int, provider: ComponentName) {
-        runCatching {
+        try {
             appWidgetManager.notifyAppWidgetViewDataChanged(
                 appWidgetId,
                 android.R.id.content,
             )
-            appWidgetManager.requestUpdateIfNeeded(appWidgetId)
+        } catch (_: Exception) {
+            // Best-effort widget update; ignore failures.
         }
     }
 
