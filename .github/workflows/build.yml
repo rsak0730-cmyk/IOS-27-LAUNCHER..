@@ -57,6 +57,19 @@ jobs:
         run: ./gradlew :app:lintDebug --no-daemon --stacktrace 2>&1 | tee lint.log
         continue-on-error: true
 
+      - name: Inspect build outputs
+        if: always()
+        run: |
+          {
+            echo "## Build output inspection"
+            echo '```'
+            echo "--- APK files ---"
+            find app/build -type f -name '*.apk' 2>/dev/null || echo "(no apk found)"
+            echo "--- outputs tree ---"
+            find app/build/outputs -type f 2>/dev/null | head -40 || echo "(no outputs dir)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Publish failure logs to summary
         if: steps.build.outcome == 'failure' || steps.build.outcome == 'cancelled'
         run: |
@@ -72,7 +85,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: new-launcher-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/**/*.apk
+          if-no-files-found: error
           retention-days: 30
 
       - name: Upload test reports
@@ -83,4 +97,5 @@ jobs:
           path: |
             **/build/reports/tests/**
             **/build/test-results/**
+          if-no-files-found: ignore
           retention-days: 14
