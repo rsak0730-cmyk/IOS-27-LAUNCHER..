@@ -27,6 +27,7 @@ import com.newlauncher.core.designsystem.tokens.SpacingTokens
 import com.newlauncher.core.glassengine.GlassSurface
 import com.newlauncher.core.performance.GraphicsProfile
 import com.newlauncher.core.storage.LauncherSettings
+import kotlin.ranges.FloatRange
 
 /**
  * The customization screen. Every control edits [LauncherSettings] through
@@ -240,7 +241,7 @@ private fun SliderSetting(
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = SpacingTokens.Sm)) {
         Text(text = "$label: ${format(value)}", color = SemanticColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
         Slider(
-            value = value.coerceIn(range.first, range.last),
+            value = value.coerceIn(range.start, range.endInclusive),
             valueRange = range,
             steps = if (stepCount > 0) stepCount else 0,
             onValueChange = onChange,

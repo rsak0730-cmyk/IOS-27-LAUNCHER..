@@ -70,7 +70,7 @@ fun AppDrawerScreen(
                     Icon(Icons.Outlined.Search, contentDescription = "Search", tint = SemanticColors.TextSecondary)
                 },
                 singleLine = true,
-                colors = androidx.compose.material3.TextFieldDefaults.textFieldColors(
+                colors = androidx.compose.material3.TextFieldDefaults.colors(
                     focusedTextColor = SemanticColors.TextPrimary,
                     unfocusedTextColor = SemanticColors.TextSecondary,
                     focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,

@@ -250,7 +250,7 @@ private fun VolumeControl(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onDecrease) {
-            Icon(Icons.AutoMirrored.Filled.Remove, contentDescription = "Decrease volume", tint = SemanticColors.TextPrimary)
+            Icon(Icons.Filled.Remove, contentDescription = "Decrease volume", tint = SemanticColors.TextPrimary)
         }
         Text(
             text = "$value",
