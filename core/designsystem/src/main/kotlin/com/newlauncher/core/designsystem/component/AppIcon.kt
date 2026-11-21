@@ -8,18 +8,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.asPainter
+import androidx.compose.ui.graphics.drawable.rememberDrawablePainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 
 /**
  * Renders a system-provided application [Drawable] as a Compose image.
  *
  * Used by the home screen grid, dock and the app drawer so every app shows its
- * real launcher icon — never a placeholder. The drawable is rasterised once and
- * cached via [remember].
+ * real launcher icon — never a placeholder. The drawable is wrapped in a
+ * [rememberDrawablePainter] and cached via [remember].
  */
 @Composable
 fun AppIcon(
@@ -29,9 +27,7 @@ fun AppIcon(
     contentDescription: String? = null,
 ) {
     val painter = remember(drawable, sizeDp) {
-        drawable.toBitmap(width = sizeDp, height = sizeDp)
-            .asImageBitmap()
-            .asPainter()
+        rememberDrawablePainter(drawable = drawable)
     }
     Image(
         painter = painter,

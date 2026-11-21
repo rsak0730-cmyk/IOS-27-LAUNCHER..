@@ -2,6 +2,7 @@ package com.newlauncher.core.graphics
 
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
+import android.graphics.Shader
 import android.os.Build
 import androidx.compose.ui.graphics.ShaderBrush
 
@@ -58,7 +59,7 @@ fun buildBlurRenderEffect(radiusPx: Float): RenderEffect? {
     val radius = radiusPx.coerceIn(0f, 100f)
     if (radius <= 0f) return null
     return runCatching {
-        RenderEffect.createBlurEffect(radius, radius)
+        RenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP)
     }.getOrNull()
 }
 
@@ -72,6 +73,6 @@ fun buildChromaticBlurRenderEffect(radiusPx: Float): RenderEffect? {
     val base = buildBlurRenderEffect(radiusPx) ?: return null
     return runCatching {
         val r = radiusPx.coerceIn(0.5f, 100f)
-        RenderEffect.createBlurEffect(r, r, base, null)
+        RenderEffect.createBlurEffect(r, r, base, Shader.TileMode.CLAMP)
     }.getOrNull()
 }
