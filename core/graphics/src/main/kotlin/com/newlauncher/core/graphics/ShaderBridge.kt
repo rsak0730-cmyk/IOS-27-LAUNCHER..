@@ -3,36 +3,21 @@ package com.newlauncher.core.graphics
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.os.Build
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Matrix
-import androidx.compose.ui.graphics.asAndroidMatrix
-import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.ShaderBrush
 
 /**
- * Bridge between Android's [RuntimeShader] (AGSL) and Compose's [Shader] /
+ * Bridge between Android's [RuntimeShader] (AGSL) and Compose's
  * [ShaderBrush] pipeline.
  *
- * Compose renders custom shaders through a [Shader] that produces a platform
- * [android.graphics.Shader]. [RuntimeShader] *is* an `android.graphics.Shader`,
- * so we simply forward it and keep its local matrix in sync with the matrix
- * Compose supplies. This lets AGSL glass shaders be used as a brush on any
- * drawable region.
+ * Compose renders custom shaders through a [ShaderBrush]. On Android,
+ * [androidx.compose.ui.graphics.Shader] is a typealias for
+ * `android.graphics.Shader`, and [RuntimeShader] *is* an
+ * `android.graphics.Shader`. [ShaderBrush.create] accepts that platform
+ * shader directly and manages the local transform matrix internally (via its
+ * own [androidx.compose.ui.graphics.TransformShader]), so we simply forward
+ * the compiled AGSL shader. This lets AGSL glass shaders be used as a brush
+ * on any drawable region without a custom [Shader] subclass.
  */
-class AgslShader(private val runtimeShader: RuntimeShader) : Shader() {
-    override fun createShader(
-        size: Size,
-        viewport: Rect,
-        localMatrix: Matrix,
-        alpha: Float,
-    ): android.graphics.Shader {
-        // Keep the shader's local matrix aligned with Compose's transform so
-        // UV-based AGSL math (refraction displacement, fresnel) is correct.
-        runtimeShader.localMatrix = localMatrix.asAndroidMatrix()
-        return runtimeShader
-    }
-}
 
 /**
  * Compile an AGSL source string into a Compose [ShaderBrush], or return null
@@ -46,7 +31,9 @@ fun createAgslBrush(source: String, namespace: String = "agsl;"): ShaderBrush? {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
     return runCatching {
         val shader = RuntimeShader(source, namespace)
-        ShaderBrush.create(AgslShader(shader))
+        // RuntimeShader is an android.graphics.Shader; ShaderBrush.create
+        // wraps it and drives the local matrix from Compose's draw transform.
+        ShaderBrush.create(shader)
     }.getOrNull()
 }
 

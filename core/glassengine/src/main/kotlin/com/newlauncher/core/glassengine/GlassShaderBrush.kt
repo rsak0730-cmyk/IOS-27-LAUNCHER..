@@ -2,7 +2,6 @@ package com.newlauncher.core.glassengine
 
 import android.graphics.RuntimeShader
 import androidx.compose.ui.graphics.ShaderBrush
-import com.newlauncher.core.graphics.AgslShader
 import com.newlauncher.core.graphics.supportsRuntimeShader
 
 /**
@@ -45,7 +44,9 @@ class GlassShaderBrush(
                     GlassShaderSources.GlassFragment,
                     GlassShaderSources.Namespace,
                 )
-                val brush = ShaderBrush.create(AgslShader(shader))
+                // RuntimeShader is an android.graphics.Shader; ShaderBrush.create
+                // wraps it directly and drives the local matrix from Compose's draw transform.
+                val brush = ShaderBrush.create(shader)
                 GlassShaderBrush(shader, brush)
             }.getOrNull()
         }
