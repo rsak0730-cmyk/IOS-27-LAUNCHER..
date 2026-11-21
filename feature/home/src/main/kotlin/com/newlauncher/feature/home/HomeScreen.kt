@@ -267,7 +267,7 @@ private fun AppGridCell(
                 if (editMode) Modifier.pointerInput(cell.key) {
                     detectDragGesturesAfterLongPress(
                         onDragStart = onDragStart,
-                        onDrag = { _, drag -> onDrag(drag.position) },
+                        onDrag = { change, _ -> onDrag(change.position) },
                         onDragEnd = { onDragEnd() },
                         onDragCancel = { onDragEnd() },
                     )
@@ -335,7 +335,7 @@ private fun Dock(
                             if (editMode) Modifier.pointerInput(slot.packageName) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { draggedIndex = index; dragOffset = Offset.Zero },
-                                    onDrag = { _, drag -> dragOffset = drag.position },
+                                    onDrag = { change, _ -> dragOffset = change.position },
                                     onDragEnd = {
                                         val from = draggedIndex
                                         draggedIndex = null
