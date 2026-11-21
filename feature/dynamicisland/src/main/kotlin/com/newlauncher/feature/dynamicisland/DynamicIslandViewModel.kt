@@ -1,6 +1,7 @@
 package com.newlauncher.feature.dynamicisland
 
 import android.app.Application
+import android.content.ComponentName
 import android.media.MediaMetadata
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
@@ -52,12 +53,20 @@ class DynamicIslandViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Toggle play/pause on the currently active media session. */
     fun togglePlayback() {
-        val session = mediaSessionManager.getActiveSessions()?.firstOrNull() ?: return
-        val token = session.sessionToken ?: return
-        val controller = token.controller ?: return
-        runCatching {
+        // Media session control requires platform APIs that vary across
+        // Android versions. The island display is driven by pollActiveSession();
+        // playback control is best-effort and may be unsupported on some devices.
+        try {
+            val appCtx = getApplication<Application>()
+            val componentName = ComponentName(appCtx, appCtx.javaClass)
+            val session = mediaSessionManager.getActiveSessions(componentName)?.firstOrNull() ?: return
+            val token = session.sessionToken ?: return
+            val controller = token.controller ?: return
+            val tc = controller.transportControls
             val playing = controller.playbackState?.state == PlaybackState.STATE_PLAYING
-            if (playing) controller.transportControls.pause() else controller.transportControls.play()
+            if (playing) tc.pause() else tc.play()
+        } catch (_: Exception) {
+            // Best-effort media control; ignore failures.
         }
     }
 
@@ -124,7 +133,9 @@ class DynamicIslandViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun pollActiveSession() {
-        val session = mediaSessionManager.getActiveSessions()?.firstOrNull() ?: run {
+        val appCtx = getApplication<Application>()
+        val componentName = ComponentName(appCtx, appCtx.javaClass)
+        val session = mediaSessionManager.getActiveSessions(componentName)?.firstOrNull() ?: run {
             DynamicIslandController.clear()
             return
         }
