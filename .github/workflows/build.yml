@@ -47,6 +47,7 @@ jobs:
 
       - name: Build debug APK
         run: |
+          set +e
           set -o pipefail
           ./gradlew :app:assembleDebug --no-daemon --stacktrace --console=plain 2>&1 | tee build.log
           status=${PIPESTATUS[0]}
