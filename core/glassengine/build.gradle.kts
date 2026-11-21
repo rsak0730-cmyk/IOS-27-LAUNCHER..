@@ -6,6 +6,9 @@ plugins {
 
 android {
     namespace = "com.newlauncher.core.glassengine"
+    buildFeatures {
+        compose = true
+    }
 }
 
 dependencies {

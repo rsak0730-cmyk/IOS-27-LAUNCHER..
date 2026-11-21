@@ -3,6 +3,7 @@ package com.newlauncher.core.designsystem.tokens
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.serialization.Serializable
 
 /**
  * The five reusable glass materials.
@@ -12,6 +13,7 @@ import androidx.compose.ui.unit.dp
  * physical-optics look. Adding a new material only requires adding an entry to
  * [GlassMaterialPresets].
  */
+@Serializable
 enum class GlassMaterialType {
     CLEAR,
     FROSTED,

@@ -6,6 +6,9 @@ plugins {
 
 android {
     namespace = "com.newlauncher.core.graphics"
+    buildFeatures {
+        compose = true
+    }
 }
 
 dependencies {

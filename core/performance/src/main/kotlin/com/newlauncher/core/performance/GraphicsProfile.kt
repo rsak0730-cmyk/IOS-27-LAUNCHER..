@@ -1,5 +1,7 @@
 package com.newlauncher.core.performance
 
+import kotlinx.serialization.Serializable
+
 /**
  * The three graphics profiles requested for NEW-LAUNCHER.
  *
@@ -9,6 +11,7 @@ package com.newlauncher.core.performance
  * - [PERFORMANCE] — reduced rendering workload that still preserves the visual
  *                   identity (fewer shader passes, no dispersion, lighter blur).
  */
+@Serializable
 enum class GraphicsProfile(
     /** Whether AGSL shader passes are enabled. */
     val enableShaders: Boolean,
