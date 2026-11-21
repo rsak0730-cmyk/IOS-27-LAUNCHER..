@@ -54,8 +54,10 @@ class DynamicIslandViewModel(app: Application) : AndroidViewModel(app) {
     fun togglePlayback() {
         val session = mediaSessionManager.getActiveSessions()?.firstOrNull() ?: return
         val token = session.sessionToken ?: return
+        val controller = token.controller ?: return
         runCatching {
-            token.controller?.transportControls?.playPause()
+            val playing = controller.playbackState?.state == PlaybackState.STATE_PLAYING
+            if (playing) controller.transportControls.pause() else controller.transportControls.play()
         }
     }
 
