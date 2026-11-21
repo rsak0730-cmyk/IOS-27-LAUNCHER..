@@ -214,7 +214,7 @@ private fun ActionTile(
 private fun SliderRow(
     icon: ImageVector,
     value: Float,
-    valueRange: FloatRange,
+    valueRange: ClosedFloatingPointRange<Float>,
     onValueChange: (Float) -> Unit,
     label: String,
 ) {
@@ -225,7 +225,7 @@ private fun SliderRow(
         Icon(icon, contentDescription = label, tint = SemanticColors.TextSecondary, modifier = Modifier.size(20.dp))
         Spacer(Modifier.size(SpacingTokens.Sm))
         Slider(
-            value = value.coerceIn(valueRange.first, valueRange.last),
+            value = value.coerceIn(valueRange.start, valueRange.endInclusive),
             valueRange = valueRange,
             onValueChange = onValueChange,
             modifier = Modifier.weight(1f),
