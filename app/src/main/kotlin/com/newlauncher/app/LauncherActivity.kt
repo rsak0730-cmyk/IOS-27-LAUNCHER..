@@ -150,7 +150,9 @@ private fun LauncherRoot(
     }
 
     NewLauncherTheme {
-        CompositionLocalProvider(LocalGlassEngine to container.glassEngine) {
+        CompositionLocalProvider(
+            LocalGlassEngine provides container.glassEngine,
+        ) {
             var showDrawer by remember { mutableStateOf(false) }
             var showControlCenter by remember { mutableStateOf(false) }
             var showCustomization by remember { mutableStateOf(false) }
