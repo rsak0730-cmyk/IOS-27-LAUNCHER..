@@ -72,13 +72,13 @@ fun GlassSurface(
     // profile permits it — this keeps the PERFORMANCE profile cheap.
     val timeSeconds: Float = if (plan.animatedSheen && shaderBrush != null) {
         val transition: InfiniteTransition = rememberInfiniteTransition(label = "glassSheen")
-        val animated by transition.animateFloat(
+        val animated = transition.animateFloat(
             initialValue = 0f,
             targetValue = 10000f,
             animationSpec = infiniteRepeatable(tween(durationMillis = 9000), RepeatMode.Restart),
             label = "sheenTime",
         )
-        animated / 1000f
+        animated.value / 1000f
     } else {
         0f
     }
