@@ -53,14 +53,12 @@ jobs:
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             echo "::error::Gradle assembleDebug failed with exit code $status"
-            echo "::error::--- What went wrong ---"
-            sed -n '/What went wrong/,/^\* Try:/p' build.log | tail -n 25 | sed 's/^/::error::/' || true
-            echo "::error::--- Caused by ---"
-            grep -iE -A 3 "Caused by" build.log | tail -n 25 | sed 's/^/::error::/' || true
-            echo "::error::--- Kotlin/compiler errors (broad) ---"
-            grep -nE "e: |Unresolved|cannot |error:|FAILED|\.kt:[0-9]|: error" build.log | tail -n 40 | sed 's/^/::error::/' || true
-            echo "::error::--- build.log tail 120 ---"
-            tail -n 120 build.log | sed 's/^/::error::/' || true
+            echo "::error::=== KOTLIN COMPILER ERRORS (most important) ==="
+            grep -nE "^e: |e: |Unresolved reference|cannot |error:|FAILED|\.kt:[0-9]+:|: error" build.log | head -n 25 | sed 's/^/::error::/' || true
+            echo "::error::=== failed tasks ==="
+            grep -nE "Execution failed for task|What went wrong" build.log | head -n 15 | sed 's/^/::error::/' || true
+            echo "::error::=== build.log tail 40 ==="
+            tail -n 40 build.log | sed 's/^/::error::/' || true
           fi
           exit "$status"
 
