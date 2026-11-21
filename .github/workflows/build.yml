@@ -57,8 +57,8 @@ jobs:
             sed -n '/What went wrong/,/^\* Try:/p' build.log | tail -n 25 | sed 's/^/::error::/' || true
             echo "::error::--- Caused by ---"
             grep -iE -A 3 "Caused by" build.log | tail -n 25 | sed 's/^/::error::/' || true
-            echo "::error::--- error lines ---"
-            grep -iE "error:|FAILED|Execution failed|Could not resolve" build.log | tail -n 20 | sed 's/^/::error::/' || true
+            echo "::error::--- Kotlin/compiler errors ---"
+            grep -iE "^e: |error:|FAILED|Execution failed|Could not resolve" build.log | tail -n 30 | sed 's/^/::error::/' || true
           fi
           exit "$status"
 
