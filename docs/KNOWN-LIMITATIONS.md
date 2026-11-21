@@ -38,8 +38,16 @@ This means:
 - **No device testing** was performed on the Galaxy A14 5G or OPPO K14x 5G.
 
 The GitHub Actions workflow is authored to perform the real build, test, and lint on
-GitHub's runners (which have the Android toolchain), producing the APK artifact. **The
-CI workflow has not yet been run, so a successful build is not yet verified.**
+GitHub's runners (which have the Android toolchain), producing the APK artifact.
+
+**CI verification status (updated 2026-11-21):** The `Build & Test` workflow
+(`.github/workflows/build.yml`) has been run successfully via `workflow_dispatch`.
+Run `44933942956` (commit `d2bc39f`) completed with **conclusion: success**. The
+`:app:assembleDebug` task succeeded, the debug APK artifact
+(`new-launcher-debug-apk`) was uploaded, and unit tests + lint ran without errors.
+Only deprecation warnings remain (Bluetooth `enable`/`disable`, `getDefaultAdapter`,
+`setWifiEnabled`, `notifyAppWidgetViewDataChanged`, `AppWidgetProviderInfo.label`) —
+all non-fatal. **The build is verified as green.**
 
 ## Feature status
 
@@ -70,17 +78,14 @@ CI workflow has not yet been run, so a successful build is not yet verified.**
   "blur everything behind the glass" backdrop blur is limited by Compose's rendering
   model and is a known refinement area.
 
-### Not verified (requires device / CI)
+### Not verified (requires device)
 
-- Compilation and build success (CI pending).
-- Unit test execution (CI pending).
 - On-device behavior: install, set-as-default-home, app launch, layout restore, widget
   display, orientation changes, error recovery (device testing pending).
 - Actual frame rates / GPU workload (no measurement performed; no FPS claimed).
 
 ## What is explicitly NOT claimed
 
-- No claim that the build succeeds (CI not yet run).
 - No claim that device testing was completed (no device access).
 - No claim of a specific FPS or performance figure.
 - No claim of Apple Live Activities access (the Dynamic Island is an original Android
