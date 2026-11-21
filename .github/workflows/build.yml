@@ -53,12 +53,12 @@ jobs:
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             echo "::error::Gradle assembleDebug failed with exit code $status"
-            echo "::error::=== KOTLIN COMPILER ERRORS (most important) ==="
-            grep -nE "^e: |e: |Unresolved reference|cannot |error:|FAILED|\.kt:[0-9]+:|: error" build.log | head -n 25 | sed 's/^/::error::/' || true
-            echo "::error::=== failed tasks / what went wrong ==="
-            grep -nE "Execution failed for task|What went wrong|Caused by|A failure occurred" build.log | head -n 20 | sed 's/^/::error::/' || true
-            echo "::error::=== build.log lines 330-420 (context) ==="
-            sed -n '330,420p' build.log | sed 's/^/::error::/' || true
+            echo "::error::=== KOTLIN COMPILER ERRORS ==="
+            grep -nE "^e: |e: |Unresolved reference|cannot |error:|\.kt:[0-9]+:|: error" build.log | head -n 10 | sed 's/^/::error::/' || true
+            echo "::error::=== FAILED TASKS ==="
+            grep -nE "> Task.*FAILED|FAILURE:|What went wrong|Caused by:" build.log | head -n 10 | sed 's/^/::error::/' || true
+            echo "::error::=== LOG TAIL 30 ==="
+            tail -n 30 build.log | sed 's/^/::error::/' || true
           fi
           exit "$status"
 
