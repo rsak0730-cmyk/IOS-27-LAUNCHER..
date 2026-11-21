@@ -88,11 +88,18 @@ jobs:
             {
               echo "## Build log (errors)"
               echo '```'
-              grep -iE "error:|FAILED|What went wrong|Caused by|Execution failed|Could not|A failure occurred" build.log | tail -n 50 || true
+              grep -iE "error:|FAILED|What went wrong|Caused by|Execution failed|Could not|A failure occurred|FAILURE" build.log | tail -n 80 || true
               echo '```'
-              echo "## Build log (tail)"
+              echo "## Build log (around BUILD FAILED)"
               echo '```'
-              tail -n 80 build.log || true
+              grep -n "BUILD FAILED" build.log | head -1 | cut -d: -f1 | while read line; do
+                start=$((line > 60 ? line - 60 : 1))
+                sed -n "${start},$((line + 20))p" build.log
+              done
+              echo '```'
+              echo "## Build log (tail 120)"
+              echo '```'
+              tail -n 120 build.log || true
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
           fi
