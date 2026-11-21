@@ -47,15 +47,12 @@ jobs:
 
       - name: Build debug APK
         run: ./gradlew :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
-        continue-on-error: true
 
       - name: Run unit tests
         run: ./gradlew :app:testDebugUnitTest :core:test --no-daemon --stacktrace 2>&1 | tee tests.log
-        continue-on-error: true
 
       - name: Run lint
         run: ./gradlew :app:lintDebug --no-daemon --stacktrace 2>&1 | tee lint.log
-        continue-on-error: true
 
       - name: Inspect build outputs
         if: always()
@@ -70,15 +67,15 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Publish failure logs to summary
-        if: steps.build.outcome == 'failure' || steps.build.outcome == 'cancelled'
+      - name: Surface build errors
+        if: failure()
         run: |
-          {
-            echo "## Build debug APK failed"
-            echo '```'
-            if [ -f build.log ]; then tail -n 120 build.log; else echo "(no build.log)"; fi
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -f build.log ]; then
+            echo "Build log tail (errors):"
+            grep -iE "error:|FAILED|What went wrong|Caused by|Execution failed|Could not|> Task .* FAILED|A failure occurred" build.log | tail -n 40 | sed 's/^/::error::/' || true
+            echo "::error::--- full build.log tail ---"
+            tail -n 60 build.log | sed 's/^/::error::/' || true
+          fi
 
       - name: Upload debug APK
         if: always()
