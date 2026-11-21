@@ -131,17 +131,25 @@ class DynamicIslandViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun pollActiveSession() {
-        val appCtx = getApplication<Application>()
-        val componentName = ComponentName(appCtx, appCtx.javaClass)
-        val controller = mediaSessionManager.getActiveSessions(componentName)?.firstOrNull() ?: run {
-            DynamicIslandController.clear()
-            return
+        // Media session access can throw on some devices/OEM ROMs (e.g. when no
+        // media session is owned by this package). An uncaught exception here
+        // would propagate through the polling coroutine and crash the launcher,
+        // so every step is guarded — the island simply keeps its previous state.
+        try {
+            val appCtx = getApplication<Application>()
+            val componentName = ComponentName(appCtx, appCtx.javaClass)
+            val controller = mediaSessionManager.getActiveSessions(componentName)?.firstOrNull() ?: run {
+                DynamicIslandController.clear()
+                return
+            }
+            val metadata = controller.metadata ?: return
+            val title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
+                ?: "Now Playing"
+            val artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)
+            val isPlaying = controller.playbackState?.state == PlaybackState.STATE_PLAYING
+            DynamicIslandController.setActivity(IslandActivity.Music(title, artist, isPlaying))
+        } catch (_: Exception) {
+            // Best-effort media poll; ignore failures and keep polling.
         }
-        val metadata = controller.metadata ?: return
-        val title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
-            ?: "Now Playing"
-        val artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)
-        val isPlaying = controller.playbackState?.state == PlaybackState.STATE_PLAYING
-        DynamicIslandController.setActivity(IslandActivity.Music(title, artist, isPlaying))
     }
 }

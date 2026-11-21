@@ -19,12 +19,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.drawable.toPainter
 import com.newlauncher.core.designsystem.tokens.SemanticColors
 import com.newlauncher.core.designsystem.tokens.SpacingTokens
 
@@ -153,7 +154,7 @@ fun WidgetPicker(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Image(
-                    bitmap = widget.icon.toBitmap(width = 144, height = 144).asImageBitmap(),
+                    painter = remember(widget.icon) { widget.icon.toPainter() },
                     contentDescription = widget.label,
                     modifier = Modifier.size(32.dp),
                 )

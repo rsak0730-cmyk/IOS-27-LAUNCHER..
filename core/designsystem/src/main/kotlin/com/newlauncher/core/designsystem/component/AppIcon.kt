@@ -8,17 +8,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.drawable.toPainter
 
 /**
  * Renders a system-provided application [Drawable] as a Compose image.
  *
  * Used by the home screen grid, dock and the app drawer so every app shows its
- * real launcher icon — never a placeholder. The drawable is rasterised to an
- * [androidx.compose.ui.graphics.ImageBitmap] once and cached via [remember].
+ * real launcher icon — never a placeholder. The drawable is wrapped in a
+ * [Painter] via [Drawable.toPainter], which renders at the screen's native
+ * density (so icons stay crisp at any DPI) and never returns null, so a drawable
+ * that cannot be rasterised degrades gracefully instead of throwing during
+ * composition.
  */
 @Composable
 fun AppIcon(
@@ -27,11 +30,9 @@ fun AppIcon(
     sizeDp: Int = 64,
     contentDescription: String? = null,
 ) {
-    val bitmap = remember(drawable, sizeDp) {
-        drawable.toBitmap(width = sizeDp, height = sizeDp).asImageBitmap()
-    }
+    val painter: Painter = remember(drawable) { drawable.toPainter() }
     Image(
-        bitmap = bitmap,
+        painter = painter,
         contentDescription = contentDescription,
         modifier = modifier,
         contentScale = ContentScale.Fit,
@@ -49,7 +50,10 @@ fun AppIconTile(
     sizeDp: Int = 64,
     label: String? = null,
 ) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+    Box(
+        modifier = modifier.size(sizeDp.dp),
+        contentAlignment = Alignment.Center,
+    ) {
         AppIcon(drawable = drawable, sizeDp = sizeDp)
     }
 }
