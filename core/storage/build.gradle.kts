@@ -12,6 +12,7 @@ dependencies {
     api(project(":core:common"))
     api(project(":core:designsystem"))
     api(project(":core:performance"))
+    api(libs.kotlinx.coroutines.android)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Matrix
+import androidx.compose.ui.graphics.asAndroidMatrix
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.ShaderBrush
 
@@ -28,7 +29,7 @@ class AgslShader(private val runtimeShader: RuntimeShader) : Shader() {
     ): android.graphics.Shader {
         // Keep the shader's local matrix aligned with Compose's transform so
         // UV-based AGSL math (refraction displacement, fresnel) is correct.
-        runtimeShader.localMatrix = localMatrix
+        runtimeShader.localMatrix = localMatrix.asAndroidMatrix()
         return runtimeShader
     }
 }
