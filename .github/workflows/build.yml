@@ -55,10 +55,10 @@ jobs:
             echo "::error::Gradle assembleDebug failed with exit code $status"
             echo "::error::=== KOTLIN COMPILER ERRORS (most important) ==="
             grep -nE "^e: |e: |Unresolved reference|cannot |error:|FAILED|\.kt:[0-9]+:|: error" build.log | head -n 25 | sed 's/^/::error::/' || true
-            echo "::error::=== failed tasks ==="
-            grep -nE "Execution failed for task|What went wrong" build.log | head -n 15 | sed 's/^/::error::/' || true
-            echo "::error::=== build.log tail 40 ==="
-            tail -n 40 build.log | sed 's/^/::error::/' || true
+            echo "::error::=== failed tasks / what went wrong ==="
+            grep -nE "Execution failed for task|What went wrong|Caused by|A failure occurred" build.log | head -n 20 | sed 's/^/::error::/' || true
+            echo "::error::=== build.log lines 330-420 (context) ==="
+            sed -n '330,420p' build.log | sed 's/^/::error::/' || true
           fi
           exit "$status"
 
