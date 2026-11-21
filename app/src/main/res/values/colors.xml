@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Deep, glass-friendly base background. -->
+    <color name="nl_bg">#10131A</color>
+    <color name="nl_bg_deepest">#080A0F</color>
+    <color name="nl_accent">#5EAAFF</color>
+</resources>

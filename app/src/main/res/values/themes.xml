@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        The launcher uses a framework Material NoActionBar theme so the activity
+        hosts a full-bleed Compose surface. Status/nav bars are transparent so
+        the glass UI draws edge-to-edge.
+    -->
+    <style name="Theme.NewLauncher" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/nl_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

@@ -11,6 +11,7 @@ android {
 dependencies {
     api(project(":core:common"))
     api(project(":core:designsystem"))
+    api(project(":core:glassengine"))
     api(project(":core:storage"))
 
     implementation(libs.androidx.lifecycle.runtime.compose)

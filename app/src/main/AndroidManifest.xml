@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        NEW-LAUNCHER permissions.
+
+        Every sensitive permission is documented here and in docs/SECURITY.md.
+        The launcher requests the minimum necessary to provide its features.
+    -->
+
+    <!-- Flashlight control (Control Center). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Wi-Fi state (Control Center toggle; direct toggle falls back to settings). -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- Bluetooth toggle (Control Center; direct toggle falls back to settings). -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+
+    <!-- Media volume control (Control Center). -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!--
+        Brightness / rotation control. This is a special (signature-level)
+        permission: declaring it lets the app request it at runtime; the user
+        grants it via the system Settings screen. When not granted, the
+        Control Center opens the relevant Settings screen instead.
+    -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+
+    <!--
+        Package visibility: the launcher queries all launchable apps via the
+        ACTION_MAIN + CATEGORY_LAUNCHER intent below, so it can list and launch
+        installed applications without a blanket QUERY_ALL_PACKAGES declaration.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".NewLauncherApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.NewLauncher">
+
+        <!--
+            The launcher activity. Exported so the system can select
+            NEW-LAUNCHER as the default home application.
+        -->
+        <activity
+            android:name=".LauncherActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="unspecified"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+            android:theme="@style/Theme.NewLauncher">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            Optional notification listener for the Dynamic Island. Declared so
+            the user can grant access from Settings; it only runs with explicit
+            permission.
+        -->
+        <service
+            android:name=".notification.IslandNotificationListener"
+            android:exported="false"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.permission.NOTIFICATION_LISTENER_SERVICE" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>
