@@ -78,7 +78,7 @@ class WidgetManager(private val context: Context) {
 
     private fun toWidgetInfo(info: AppWidgetProviderInfo): WidgetInfo? {
         val label = info.label?.toString() ?: info.provider?.className ?: return null
-        val icon = runCatching { info.loadIcon(context) }.getOrNull() ?: return null
+        val icon = runCatching { info.loadIcon(context, 0) }.getOrNull() ?: return null
         return WidgetInfo(
             componentName = info.provider ?: return null,
             label = label,
