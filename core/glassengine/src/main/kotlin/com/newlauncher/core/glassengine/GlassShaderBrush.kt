@@ -40,13 +40,13 @@ class GlassShaderBrush(
         fun create(): GlassShaderBrush? {
             if (!supportsRuntimeShader) return null
             return runCatching {
-                val shader = RuntimeShader(
-                    GlassShaderSources.GlassFragment,
-                    GlassShaderSources.Namespace,
-                )
-                // RuntimeShader is an android.graphics.Shader; ShaderBrush.create
-                // wraps it directly and drives the local matrix from Compose's draw transform.
-                val brush = ShaderBrush.create(shader)
+                // RuntimeShader takes the AGSL source string; the namespace is
+                // declared inline in the source (AGSL default namespace).
+                val shader = RuntimeShader(GlassShaderSources.GlassFragment)
+                // RuntimeShader is an android.graphics.Shader; the ShaderBrush
+                // constructor wraps it and drives the local matrix from Compose's
+                // draw transform.
+                val brush = ShaderBrush(shader)
                 GlassShaderBrush(shader, brush)
             }.getOrNull()
         }

@@ -12,11 +12,11 @@ import androidx.compose.ui.graphics.ShaderBrush
  * Compose renders custom shaders through a [ShaderBrush]. On Android,
  * [androidx.compose.ui.graphics.Shader] is a typealias for
  * `android.graphics.Shader`, and [RuntimeShader] *is* an
- * `android.graphics.Shader`. [ShaderBrush.create] accepts that platform
- * shader directly and manages the local transform matrix internally (via its
- * own [androidx.compose.ui.graphics.TransformShader]), so we simply forward
- * the compiled AGSL shader. This lets AGSL glass shaders be used as a brush
- * on any drawable region without a custom [Shader] subclass.
+ * `android.graphics.Shader`. The [ShaderBrush] constructor accepts that
+ * platform shader directly and manages the local transform matrix internally
+ * (via its own transform shader), so we simply forward the compiled AGSL
+ * shader. This lets AGSL glass shaders be used as a brush on any drawable
+ * region without a custom [Shader] subclass.
  */
 
 /**
@@ -24,16 +24,19 @@ import androidx.compose.ui.graphics.ShaderBrush
  * when the runtime does not support RuntimeShader (pre-Android 12) or the
  * source fails to compile. The caller falls back to a non-shader strategy.
  *
- * @param source AGSL fragment shader source.
- * @param namespace AGSL namespace declaration (e.g. `"agsl;"`).
+ * The AGSL namespace declaration is part of [source] (AGSL shaders declare
+ * their own namespace inline); [RuntimeShader] takes only the source string.
+ *
+ * @param source AGSL fragment shader source, including its namespace block.
  */
-fun createAgslBrush(source: String, namespace: String = "agsl;"): ShaderBrush? {
+fun createAgslBrush(source: String): ShaderBrush? {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
     return runCatching {
-        val shader = RuntimeShader(source, namespace)
-        // RuntimeShader is an android.graphics.Shader; ShaderBrush.create
-        // wraps it and drives the local matrix from Compose's draw transform.
-        ShaderBrush.create(shader)
+        val shader = RuntimeShader(source)
+        // RuntimeShader is an android.graphics.Shader; the ShaderBrush
+        // constructor wraps it and drives the local matrix from Compose's
+        // draw transform.
+        ShaderBrush(shader)
     }.getOrNull()
 }
 
