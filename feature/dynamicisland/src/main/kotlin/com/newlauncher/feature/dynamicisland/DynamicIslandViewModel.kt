@@ -59,9 +59,7 @@ class DynamicIslandViewModel(app: Application) : AndroidViewModel(app) {
         try {
             val appCtx = getApplication<Application>()
             val componentName = ComponentName(appCtx, appCtx.javaClass)
-            val session = mediaSessionManager.getActiveSessions(componentName)?.firstOrNull() ?: return
-            val token = session.sessionToken ?: return
-            val controller = token.controller ?: return
+            val controller = mediaSessionManager.getActiveSessions(componentName)?.firstOrNull() ?: return
             val tc = controller.transportControls
             val playing = controller.playbackState?.state == PlaybackState.STATE_PLAYING
             if (playing) tc.pause() else tc.play()
@@ -135,12 +133,10 @@ class DynamicIslandViewModel(app: Application) : AndroidViewModel(app) {
     private fun pollActiveSession() {
         val appCtx = getApplication<Application>()
         val componentName = ComponentName(appCtx, appCtx.javaClass)
-        val session = mediaSessionManager.getActiveSessions(componentName)?.firstOrNull() ?: run {
+        val controller = mediaSessionManager.getActiveSessions(componentName)?.firstOrNull() ?: run {
             DynamicIslandController.clear()
             return
         }
-        val token = session.sessionToken ?: return
-        val controller = token.controller ?: return
         val metadata = controller.metadata ?: return
         val title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
             ?: "Now Playing"
