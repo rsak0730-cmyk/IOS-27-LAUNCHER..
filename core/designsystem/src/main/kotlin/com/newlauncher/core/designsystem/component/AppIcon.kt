@@ -8,11 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.asPainter
-import androidx.compose.ui.graphics.painter.ColorPainter
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -22,9 +18,9 @@ import androidx.core.graphics.drawable.toBitmap
  * Renders a system-provided application [Drawable] as a Compose image.
  *
  * Used by the home screen grid, dock and the app drawer so every app shows its
- * real launcher icon — never a placeholder. The drawable is rasterised to a
- * bitmap once (keyed on the drawable + the resolved pixel size) and cached via
- * [remember].
+ * real launcher icon — never a placeholder. The drawable is rasterised to an
+ * [androidx.compose.ui.graphics.ImageBitmap] once (keyed on the drawable + the
+ * resolved pixel size) and cached via [remember].
  *
  * Two defensive details matter here:
  *  - The rasterisation target is the *pixel* size derived from [sizeDp] via the
@@ -33,8 +29,8 @@ import androidx.core.graphics.drawable.toBitmap
  *  - [Drawable.toBitmap] returns null (or can throw) for drawables it cannot
  *    rasterise. A null/throwing result previously crashed the whole launcher
  *    during composition (the home grid renders many icons at once). Here it
- *    degrades gracefully to a transparent painter, so a single bad icon never
- *    takes down the app.
+ *    degrades gracefully to an empty box, so a single bad icon never takes down
+ *    the app.
  */
 @Composable
 fun AppIcon(
@@ -44,24 +40,28 @@ fun AppIcon(
     contentDescription: String? = null,
 ) {
     val density = LocalDensity.current
-    val pxSize = with(density) { sizeDp.dp.toPx() }
+    val pxSize = with(density) { sizeDp.dp.toPx() }.toInt()
 
-    val painter: Painter = remember(drawable, pxSize) {
+    val imageBitmap = remember(drawable, pxSize) {
         try {
-            drawable.toBitmap(width = pxSize, height = pxSize)
-                ?.asImageBitmap()
-                ?.asPainter()
+            drawable.toBitmap(width = pxSize, height = pxSize)?.asImageBitmap()
         } catch (_: Exception) {
             null
-        } ?: ColorPainter(Color.Transparent)
+        }
     }
 
-    Image(
-        painter = painter,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        contentScale = ContentScale.Fit,
-    )
+    if (imageBitmap != null) {
+        Image(
+            bitmap = imageBitmap,
+            contentDescription = contentDescription,
+            modifier = modifier,
+            contentScale = ContentScale.Fit,
+        )
+    } else {
+        // Graceful fallback: a drawable that cannot be rasterised must not
+        // crash composition. Render an empty box so the cell keeps its size.
+        Box(modifier = modifier, contentAlignment = Alignment.Center)
+    }
 }
 
 /**

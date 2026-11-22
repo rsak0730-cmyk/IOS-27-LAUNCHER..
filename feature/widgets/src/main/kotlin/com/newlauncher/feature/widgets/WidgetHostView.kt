@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,10 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.asPainter
-import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.drawable.toBitmap
@@ -156,19 +154,22 @@ fun WidgetPicker(
                     .padding(vertical = SpacingTokens.Sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
-                    painter = remember(widget.icon) {
-                        try {
-                            widget.icon.toBitmap(width = 144, height = 144)
-                                ?.asImageBitmap()
-                                ?.asPainter()
-                        } catch (_: Exception) {
-                            null
-                        } ?: ColorPainter(Color.Transparent)
-                    },
-                    contentDescription = widget.label,
-                    modifier = Modifier.size(32.dp),
-                )
+                val widgetIcon = remember(widget.icon) {
+                    try {
+                        widget.icon.toBitmap(width = 144, height = 144)?.asImageBitmap()
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+                if (widgetIcon != null) {
+                    Image(
+                        bitmap = widgetIcon,
+                        contentDescription = widget.label,
+                        modifier = Modifier.size(32.dp),
+                    )
+                } else {
+                    Box(modifier = Modifier.size(32.dp))
+                }
                 Text(
                     text = widget.label,
                     modifier = Modifier.padding(start = SpacingTokens.Sm),
