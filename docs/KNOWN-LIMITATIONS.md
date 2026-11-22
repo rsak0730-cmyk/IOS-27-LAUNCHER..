@@ -40,14 +40,27 @@ This means:
 The GitHub Actions workflow is authored to perform the real build, test, and lint on
 GitHub's runners (which have the Android toolchain), producing the APK artifact.
 
-**CI verification status (updated 2026-11-21):** The `Build & Test` workflow
+**CI verification status (updated 2026-11-22):** The `Build & Test` workflow
 (`.github/workflows/build.yml`) has been run successfully via `workflow_dispatch`.
-Run `44933942956` (commit `d2bc39f`) completed with **conclusion: success**. The
-`:app:assembleDebug` task succeeded, the debug APK artifact
-(`new-launcher-debug-apk`) was uploaded, and unit tests + lint ran without errors.
-Only deprecation warnings remain (Bluetooth `enable`/`disable`, `getDefaultAdapter`,
-`setWifiEnabled`, `notifyAppWidgetViewDataChanged`, `AppWidgetProviderInfo.label`) —
-all non-fatal. **The build is verified as green.**
+The latest verified run is `44965474579` (commit `f8506ec`), which completed with
+**conclusion: success**. The `:app:assembleDebug` task succeeded, the debug APK
+artifact (`new-launcher-debug-apk`) was uploaded, and unit tests + lint ran without
+errors. Only deprecation warnings remain (Bluetooth `enable`/`disable`,
+`getDefaultAdapter`, `setWifiEnabled`, `notifyAppWidgetViewDataChanged`,
+`AppWidgetProviderInfo.label`) — all non-fatal. **The build is verified as green.**
+
+**Launch-crash fixes (CI-verified, commit `f8506ec`):** Two runtime crash risks on
+app open were fixed and verified green:
+- **App icon rasterisation crash** — `AppIcon`/`WidgetPicker` called
+  `Drawable.toBitmap(...).asImageBitmap()` with no null guard. `toBitmap` returns
+  null (or throws) for drawables it cannot rasterise, and the home grid renders many
+  icons at once, so a single bad icon NPE'd during composition and crashed the whole
+  launcher on open. The rasterisation target is now the density-resolved *pixel* size
+  (fixing blurry/glitchy icons on high-density screens) and failures degrade
+  gracefully to an empty box instead of crashing.
+- **Media-session poll crash** — `DynamicIslandViewModel.pollActiveSession()` could
+  throw on OEM ROMs and propagate through its polling coroutine, crashing the app on
+  open; the poll is now wrapped in try/catch.
 
 ## Feature status
 
