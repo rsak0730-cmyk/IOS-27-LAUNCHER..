@@ -53,14 +53,21 @@ object HomeLayoutFactory {
             return HomeLayout(pages = existingPages, dock = emptyList())
         }
 
-        val pagesCount = maxOf(settings.pages, existingPages.size).coerceAtLeast(1)
-        val pages = List(pagesCount) { i ->
-            (existingPages.getOrNull(i) ?: HomePage(id = "page-$i")).copy(cells = emptyList())
-        }.toMutableList()
-
         // Reserve the first dockSize apps for the dock; the rest fill the grid.
         val dockApps = apps.take(dockSize)
         val gridApps = apps.drop(dockSize)
+
+        // Create enough pages to hold every grid app, never fewer than the
+        // user's configured page count or the pages already present.
+        val neededPages = if (cellsPerPage > 0) {
+            (gridApps.size + cellsPerPage - 1) / cellsPerPage
+        } else {
+            0
+        }
+        val pagesCount = maxOf(settings.pages, existingPages.size, neededPages).coerceAtLeast(1)
+        val pages = List(pagesCount) { i ->
+            (existingPages.getOrNull(i) ?: HomePage(id = "page-$i")).copy(cells = emptyList())
+        }.toMutableList()
 
         var appIdx = 0
         for (i in pages.indices) {
