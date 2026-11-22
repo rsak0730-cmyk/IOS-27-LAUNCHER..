@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.newlauncher.core.common.AppInfo
 import com.newlauncher.core.common.AppProvider
 import com.newlauncher.core.storage.HomeLayout
+import com.newlauncher.core.storage.HomeLayoutFactory
 import com.newlauncher.core.storage.HomePage
 import com.newlauncher.core.storage.HomeCell
 import com.newlauncher.core.storage.DockSlot
@@ -176,42 +177,18 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         if (apps.isEmpty()) return
 
         val current = layout.value
-        val settings = settings.value
-        val cols = settings.gridColumns.coerceAtLeast(1)
-        val dockSize = settings.dockSize.coerceAtLeast(0)
-        val rowsPerPage = 5
-        val cellsPerPage = cols * rowsPerPage
-
-        // Only auto-populate a truly empty layout — never touch a user's arrangement.
+        // Only auto-populate a genuinely empty layout — never touch a user's
+        // existing arrangement.
         if (current.pages.all { it.cells.isEmpty() } && current.dock.isEmpty()) {
-            val pagesCount = maxOf(settings.pages, current.pages.size).coerceAtLeast(1)
-            val pages = List(pagesCount) { i ->
-                (current.pages.getOrNull(i) ?: HomePage(id = "page-$i")).copy(cells = emptyList())
-            }.toMutableList()
-
-            val dockApps = apps.take(dockSize)
-            val gridApps = apps.drop(dockSize)
-
-            var appIdx = 0
-            for (i in pages.indices) {
-                val cells = mutableListOf<HomeCell>()
-                var row = 0
-                var col = 0
-                while (appIdx < gridApps.size && cells.size < cellsPerPage) {
-                    val app = gridApps[appIdx]
-                    cells.add(HomeCell(app.packageName, app.className, app.label, col, row))
-                    appIdx++
-                    col++
-                    if (col >= cols) {
-                        col = 0
-                        row++
-                    }
-                }
-                pages[i] = pages[i].copy(cells = cells)
+            val placements = apps.map {
+                HomeLayoutFactory.AppPlacement(it.packageName, it.className, it.label)
             }
-
-            val dock = dockApps.map { DockSlot(it.packageName, it.className, it.label) }
-            repository.saveLayout(current.copy(pages = pages, dock = dock))
+            val populated = HomeLayoutFactory.populateEmptyLayout(
+                apps = placements,
+                settings = settings.value,
+                existingPages = current.pages,
+            )
+            repository.saveLayout(populated)
         }
     }
 

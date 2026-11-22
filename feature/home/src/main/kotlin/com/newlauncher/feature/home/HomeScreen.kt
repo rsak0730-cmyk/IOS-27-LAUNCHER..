@@ -1,5 +1,6 @@
 package com.newlauncher.feature.home
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -7,11 +8,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -19,6 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ViewQuilt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -49,11 +54,16 @@ import kotlin.math.abs
 /**
  * The premium iPhone-inspired home screen.
  *
- * Composition:
- *  - a [HorizontalPager] of pages, each showing an app grid
- *  - a glass dock pinned to the bottom
- *  - page indicators
- *  - a top toolbar with search (opens the app drawer) and an edit-mode toggle
+ * Layout (top → bottom):
+ *  - a lightweight toolbar: edit (left), app drawer / widgets / settings (right)
+ *  - the Dynamic Island, centred (rendered via [islandContent] so the home
+ *    module stays free of a cross-feature dependency on the island module)
+ *  - a responsive [HorizontalPager] of app-grid pages. The pager is
+ *    weight-bound so the page indicator and dock always fit on screen — a
+ *    `fillMaxSize` pager previously pushed them below the fold.
+ *  - animated page indicators
+ *  - a floating glass dock pinned to the bottom (always rendered, even when
+ *    the saved dock list is empty)
  *
  * Rearrangement is real: in edit mode, long-press an icon and drag to swap
  * with an adjacent cell, or tap the remove affordance. Layout changes are
@@ -63,6 +73,9 @@ import kotlin.math.abs
 fun HomeScreen(
     viewModel: HomeViewModel,
     onOpenAppDrawer: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenWidgets: () -> Unit,
+    islandContent: @Composable () -> Unit,
 ) {
     val layout by viewModel.layout.collectAsState()
     val settings by viewModel.settings.collectAsState()
@@ -79,37 +92,57 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(SemanticColors.Background)
-            .padding(horizontal = SpacingTokens.L),
+            // Respect the status bar / display-cutout at the top and the
+            // navigation bar (or gesture-nav inset) at the bottom so the
+            // toolbar and dock never sit under a system bar.
+            .statusBarsPadding()
+            .navigationBarsPadding(),
     ) {
+        // ---- Top toolbar ----
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = SpacingTokens.Xl, bottom = SpacingTokens.Sm),
+                .padding(horizontal = SpacingTokens.L, vertical = SpacingTokens.Sm),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = { viewModel.toggleEditMode() }) {
                 Icon(
                     if (editMode) Icons.Filled.Apps else Icons.Filled.Edit,
-                    contentDescription = "Edit home screen",
+                    contentDescription = if (editMode) "Exit edit mode" else "Edit home screen",
                     tint = SemanticColors.TextPrimary,
                 )
             }
-            IconButton(onClick = onOpenAppDrawer) {
-                Icon(
-                    Icons.Filled.Apps,
-                    contentDescription = "Open app drawer",
-                    tint = SemanticColors.TextPrimary,
-                )
+            Row(horizontalArrangement = Arrangement.spacedBy(SpacingTokens.Xs)) {
+                IconButton(onClick = onOpenAppDrawer) {
+                    Icon(Icons.Filled.Apps, contentDescription = "App drawer", tint = SemanticColors.TextPrimary)
+                }
+                IconButton(onClick = onOpenWidgets) {
+                    Icon(Icons.Filled.ViewQuilt, contentDescription = "Widgets", tint = SemanticColors.TextPrimary)
+                }
+                IconButton(onClick = onOpenSettings) {
+                    Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = SemanticColors.TextPrimary)
+                }
             }
         }
 
+        // ---- Dynamic Island (centred, in-flow so it never overlaps the toolbar) ----
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = SpacingTokens.Ms),
+            contentAlignment = Alignment.Center,
+        ) {
+            islandContent()
+        }
+
+        // ---- App-grid pager (weight-bound: leaves room for indicator + dock) ----
         val pagerState = rememberPagerState(pageCount = { layout.pages.size.coerceAtLeast(1) })
         LaunchedEffect(pagerState.currentPage) {
             viewModel.onPageChange(pagerState.currentPage)
         }
 
-        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+        HorizontalPager(state = pagerState, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
             val pageData = layout.pages.getOrNull(page)
             val cells = pageData?.cells ?: emptyList()
             AppGridPage(
@@ -126,20 +159,29 @@ fun HomeScreen(
             )
         }
 
+        // ---- Page indicators (above the dock) ----
         PageIndicator(
             count = layout.pages.size.coerceAtLeast(1),
             current = pagerState.currentPage,
             modifier = Modifier.padding(vertical = SpacingTokens.Sm),
         )
 
-        Dock(
-            slots = layout.dock,
-            appByKey = appByKey,
-            iconSize = settings.appIconSize,
-            editMode = editMode,
-            onLaunch = { viewModel.launch(it) },
-            onReorder = { from, to -> viewModel.reorderDock(from, to) },
-        )
+        // ---- Glass dock (always rendered, centred, above the nav bar) ----
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = SpacingTokens.Xxl, top = SpacingTokens.Sm),
+            contentAlignment = Alignment.Center,
+        ) {
+            Dock(
+                slots = layout.dock,
+                appByKey = appByKey,
+                iconSize = settings.appIconSize,
+                editMode = editMode,
+                onLaunch = { viewModel.launch(it) },
+                onReorder = { from, to -> viewModel.reorderDock(from, to) },
+            )
+        }
     }
 }
 
@@ -159,7 +201,7 @@ private fun AppGridPage(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(vertical = SpacingTokens.Xl),
+            .padding(horizontal = SpacingTokens.L, vertical = SpacingTokens.Xl),
     ) {
         AppGrid(
             cells = cells,
@@ -192,14 +234,15 @@ private fun AppGrid(
     var draggedIndex by remember { mutableStateOf<Int?>(null) }
     var dragOffset by remember { mutableStateOf(Offset.Zero) }
 
-    Column(verticalArrangement = Arrangement.spacedBy((8 * spacing).dp)) {
-        for (row in 0 until ((cells.size + columns - 1) / columns)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy((8 * spacing).dp),
-            ) {
-                for (col in 0 until columns) {
-                    val index = row * columns + col
+    val cols = columns.coerceAtLeast(1)
+    val gap = (8 * spacing).dp
+    val rowCount = if (cells.isEmpty()) 0 else (cells.size + cols - 1) / cols
+
+    Column(verticalArrangement = Arrangement.spacedBy(gap)) {
+        for (row in 0 until rowCount) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                for (col in 0 until cols) {
+                    val index = row * cols + col
                     if (index < cells.size) {
                         AppGridCell(
                             cell = cells[index],
@@ -207,6 +250,10 @@ private fun AppGrid(
                             iconSize = iconSize,
                             editMode = editMode,
                             isDragged = draggedIndex == index,
+                            // weight(1f) distributes each cell evenly across the
+                            // available width, so the grid is responsive and
+                            // fills the screen horizontally.
+                            modifier = Modifier.weight(1f).padding(horizontal = gap),
                             onLaunch = { onLaunch(it) },
                             onRemove = { onRemove(index) },
                             onMoveToDock = { onMoveToDock(index) },
@@ -216,7 +263,7 @@ private fun AppGrid(
                                 val from = draggedIndex
                                 draggedIndex = null
                                 if (from != null) {
-                                    val target = computeAdjacentTarget(from, columns, dragOffset)
+                                    val target = computeAdjacentTarget(from, cols, dragOffset)
                                     if (target != null && target != from) onMove(from, target)
                                 }
                             },
@@ -252,6 +299,7 @@ private fun AppGridCell(
     iconSize: Float,
     editMode: Boolean,
     isDragged: Boolean,
+    modifier: Modifier = Modifier,
     onLaunch: (AppInfo) -> Unit,
     onRemove: () -> Unit,
     onMoveToDock: () -> Unit,
@@ -260,42 +308,64 @@ private fun AppGridCell(
     onDragEnd: () -> Unit,
 ) {
     val sizeDp = (64 * iconSize).dp
-    Box(
-        modifier = Modifier
-            .size(sizeDp)
-            .then(
-                if (editMode) Modifier.pointerInput(cell.key) {
-                    detectDragGesturesAfterLongPress(
-                        onDragStart = onDragStart,
-                        onDrag = { change, _ -> onDrag(change.position) },
-                        onDragEnd = { onDragEnd() },
-                        onDragCancel = { onDragEnd() },
-                    )
-                } else Modifier.clickable { app?.let(onLaunch) }
-            )
-            .clip(RoundedCornerShape(SpacingTokens.Md))
-            .then(if (isDragged) Modifier else Modifier),
+
+    Column(
+        modifier = modifier.then(
+            if (editMode) Modifier.pointerInput(cell.key) {
+                detectDragGesturesAfterLongPress(
+                    onDragStart = onDragStart,
+                    onDrag = { change, _ -> onDrag(change.position) },
+                    onDragEnd = { onDragEnd() },
+                    onDragCancel = { onDragEnd() },
+                )
+            } else Modifier.clickable { app?.let(onLaunch) }
+        ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(SpacingTokens.Xs),
     ) {
-        if (app != null) {
-            AppIcon(drawable = app.icon, sizeDp = sizeDp.value.toInt())
-        } else {
-            Text(
-                text = cell.label.firstOrNull()?.toString() ?: "?",
-                color = SemanticColors.TextTertiary,
-            )
-        }
-        if (editMode) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(18.dp)
-                    .clip(CircleShape)
-                    .background(SemanticColors.Error)
-                    .clickable { onRemove() },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(text = "×", color = Color.White, style = MaterialTheme.typography.labelLarge)
+        Box(
+            modifier = Modifier
+                .size(sizeDp)
+                .clip(RoundedCornerShape(SpacingTokens.Md))
+                .then(
+                    if (isDragged) Modifier.graphicsLayer {
+                        scaleX = 1.12f
+                        scaleY = 1.12f
+                    } else Modifier
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (app != null) {
+                AppIcon(drawable = app.icon, sizeDp = sizeDp.value.toInt())
+            } else {
+                Text(
+                    text = cell.label.firstOrNull()?.toString() ?: "?",
+                    color = SemanticColors.TextTertiary,
+                )
             }
+            if (editMode) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(18.dp)
+                        .clip(CircleShape)
+                        .background(SemanticColors.Error)
+                        .clickable { onRemove() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(text = "×", color = Color.White, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+
+        // App label underneath the icon.
+        if (app != null) {
+            Text(
+                text = app.label,
+                style = MaterialTheme.typography.labelSmall,
+                color = SemanticColors.TextSecondary,
+                maxLines = 1,
+            )
         }
     }
 }
@@ -312,10 +382,10 @@ private fun Dock(
     var draggedIndex by remember { mutableStateOf<Int?>(null) }
     var dragOffset by remember { mutableStateOf(Offset.Zero) }
 
+    // The dock glass container is ALWAYS rendered — it must not disappear just
+    // because the saved dock list is empty. An empty dock shows a subtle hint.
     GlassPanel(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = SpacingTokens.Xxl, top = SpacingTokens.Sm),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(SpacingTokens.Xxl),
     ) {
         Row(
@@ -325,40 +395,49 @@ private fun Dock(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            slots.forEachIndexed { index, slot ->
-                val app = appByKey["${slot.packageName}/${slot.className}"]
-                val sizeDp = (64 * iconSize).dp
-                Box(
-                    modifier = Modifier
-                        .size(sizeDp)
-                        .then(
-                            if (editMode) Modifier.pointerInput(slot.packageName) {
-                                detectDragGesturesAfterLongPress(
-                                    onDragStart = { draggedIndex = index; dragOffset = Offset.Zero },
-                                    onDrag = { change, _ -> dragOffset = change.position },
-                                    onDragEnd = {
-                                        val from = draggedIndex
-                                        draggedIndex = null
-                                        if (from != null) {
-                                            val target = if (abs(dragOffset.x) > abs(dragOffset.y)) {
-                                                if (dragOffset.x > 0) from + 1 else from - 1
-                                            } else {
-                                                if (dragOffset.y > 0) from else from
+            if (slots.isEmpty()) {
+                Text(
+                    text = "Dock",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = SemanticColors.TextTertiary,
+                    modifier = Modifier.padding(horizontal = SpacingTokens.Xxl),
+                )
+            } else {
+                slots.forEachIndexed { index, slot ->
+                    val app = appByKey["${slot.packageName}/${slot.className}"]
+                    val sizeDp = (64 * iconSize).dp
+                    Box(
+                        modifier = Modifier
+                            .size(sizeDp)
+                            .then(
+                                if (editMode) Modifier.pointerInput(slot.packageName) {
+                                    detectDragGesturesAfterLongPress(
+                                        onDragStart = { draggedIndex = index; dragOffset = Offset.Zero },
+                                        onDrag = { change, _ -> dragOffset = change.position },
+                                        onDragEnd = {
+                                            val from = draggedIndex
+                                            draggedIndex = null
+                                            if (from != null) {
+                                                val target = if (abs(dragOffset.x) > abs(dragOffset.y)) {
+                                                    if (dragOffset.x > 0) from + 1 else from - 1
+                                                } else {
+                                                    if (dragOffset.y > 0) from else from
+                                                }
+                                                if (target in slots.indices && target != from) onReorder(from, target)
                                             }
-                                            if (target in slots.indices && target != from) onReorder(from, target)
-                                        }
-                                    },
-                                    onDragCancel = { draggedIndex = null },
-                                )
-                            } else Modifier.clickable { app?.let(onLaunch) }
-                        )
-                        .clip(RoundedCornerShape(SpacingTokens.Md)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (app != null) {
-                        AppIcon(drawable = app.icon, sizeDp = sizeDp.value.toInt())
-                    } else {
-                        Text(slot.label.firstOrNull()?.toString() ?: "?", color = SemanticColors.TextTertiary)
+                                        },
+                                        onDragCancel = { draggedIndex = null },
+                                    )
+                                } else Modifier.clickable { app?.let(onLaunch) }
+                            )
+                            .clip(RoundedCornerShape(SpacingTokens.Md)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (app != null) {
+                            AppIcon(drawable = app.icon, sizeDp = sizeDp.value.toInt())
+                        } else {
+                            Text(slot.label.firstOrNull()?.toString() ?: "?", color = SemanticColors.TextTertiary)
+                        }
                     }
                 }
             }
@@ -373,12 +452,18 @@ private fun PageIndicator(count: Int, current: Int, modifier: Modifier = Modifie
         horizontalArrangement = Arrangement.Center,
     ) {
         repeat(count) { i ->
+            val active = i == current
+            // Animate the active indicator so the active dot grows/shrinks.
+            val size by animateDpAsState(
+                targetValue = if (active) 8.dp else 6.dp,
+                label = "indicatorSize",
+            )
             Box(
                 modifier = Modifier
                     .padding(horizontal = 4.dp)
-                    .size(if (i == current) 8.dp else 6.dp)
+                    .size(size)
                     .clip(CircleShape)
-                    .background(if (i == current) SemanticColors.TextPrimary else SemanticColors.TextTertiary),
+                    .background(if (active) SemanticColors.TextPrimary else SemanticColors.TextTertiary),
             )
         }
     }

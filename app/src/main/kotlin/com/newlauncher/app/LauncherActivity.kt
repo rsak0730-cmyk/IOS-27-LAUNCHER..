@@ -12,10 +12,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -159,50 +159,30 @@ private fun LauncherRoot(
             var showWidgets by remember { mutableStateOf(false) }
 
             Box(modifier = Modifier.fillMaxSize()) {
-                // Home screen.
+                // Home screen — owns the toolbar (edit / app drawer / widgets /
+                // settings), the Dynamic Island slot, the grid, page indicators
+                // and the dock.
                 HomeScreen(
                     viewModel = homeVm,
                     onOpenAppDrawer = { showDrawer = true },
+                    onOpenSettings = { showCustomization = true },
+                    onOpenWidgets = { showWidgets = true },
+                    islandContent = { DynamicIsland(viewModel = islandVm) },
                 )
 
-                // Dynamic Island, floating at the top centre.
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 24.dp),
-                ) {
-                    DynamicIsland(viewModel = islandVm)
-                }
-
-                // Settings entry (top-right).
-                IconButton(
-                    onClick = { showCustomization = true },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 20.dp, end = 56.dp),
-                ) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = Color.White)
-                }
-
-                // Widgets entry (top-right, beside settings).
-                IconButton(
-                    onClick = { showWidgets = true },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 20.dp, end = 16.dp),
-                ) {
-                    Icon(Icons.Filled.Apps, contentDescription = "Widgets", tint = Color.White)
-                }
-
-                // Control Center toggle (bottom-right).
+                // Control Center toggle (bottom-right). Uses its own recognizable
+                // icon (Tune) so it is clearly not a duplicate of the Settings
+                // gear, and is positioned above the dock and clear of the
+                // navigation bar / gesture-nav inset.
                 IconButton(
                     onClick = { showControlCenter = true },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 16.dp, bottom = 96.dp),
+                        .navigationBarsPadding()
+                        .padding(end = 16.dp, bottom = 120.dp),
                 ) {
                     Icon(
-                        Icons.Filled.Settings,
+                        Icons.Filled.Tune,
                         contentDescription = "Control Center",
                         tint = Color.White,
                     )
