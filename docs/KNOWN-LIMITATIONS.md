@@ -42,7 +42,7 @@ GitHub's runners (which have the Android toolchain), producing the APK artifact.
 
 **CI verification status (updated 2026-11-22):** The `Build & Test` workflow
 (`.github/workflows/build.yml`) has been run successfully via `workflow_dispatch`.
-The latest verified run is `44965474579` (commit `f8506ec`), which completed with
+The latest verified run is `51` (commit `40b7685`), which completed with
 **conclusion: success**. The `:app:assembleDebug` task succeeded, the debug APK
 artifact (`new-launcher-debug-apk`) was uploaded, and unit tests + lint ran without
 errors. Only deprecation warnings remain (Bluetooth `enable`/`disable`,
@@ -62,6 +62,14 @@ app open were fixed and verified green:
   throw on OEM ROMs and propagate through its polling coroutine, crashing the app on
   open; the poll is now wrapped in try/catch.
 
+**Empty-home fix (CI-verified, commit `40b7685`):** On-device screenshot evidence
+revealed that a freshly installed launcher showed a **blank home screen** (the status
+bar rendered, but the app grid was empty). Root cause: the home grid only renders apps
+explicitly placed in `HomeCell` slots, and a fresh install had no placements, no
+auto-population, and no "add to home" affordance in the drawer. `HomeViewModel` now
+auto-populates an empty layout on first launch (dock + grid, column-major) without
+overwriting any existing user arrangement. See the on-device section below.
+
 ## Feature status
 
 ### Implemented (code complete)
@@ -69,7 +77,8 @@ app open were fixed and verified green:
 - **Physical Glass Rendering Engine** — AGSL shaders, five materials, render-plan
   resolver, `GlassSurface`/`GlassCard`/`GlassPanel`, blur + fallback strategies.
 - **Design system** — three-layer tokens, theme, typography, AppIcon.
-- **Home screen** — pager, grid, dock, page indicators, drag-to-rearrange, persistence.
+- **Home screen** — pager, grid, dock, page indicators, drag-to-rearrange,
+  persistence, and **auto-population of the grid/dock on first launch**.
 - **App drawer** — discovery, sectioned list, search, real launch.
 - **Dynamic Island** — state/controller/ViewModel, MediaSession + timer, animated bubble.
 - **Control Center** — Wi-Fi, Bluetooth, flashlight, brightness, volume, battery,
@@ -91,15 +100,37 @@ app open were fixed and verified green:
   "blur everything behind the glass" backdrop blur is limited by Compose's rendering
   model and is a known refinement area.
 
+### On-device evidence (partial — see limitations below)
+
+On 2026-11-22 a screenshot of the launcher was captured on a real **Samsung device
+(Android 14 / One UI, 1080×2302)**. Objective pixel analysis of that screenshot
+confirmed:
+
+- The launcher **opens without crashing** — the status bar and launcher shell render
+  (this is the first on-device confirmation that the `f8506ec` crash fixes work on a
+  real device, not just in CI).
+- The screenshot also exposed the **blank-home-screen** defect described above, which
+  is now fixed by `40b7685`.
+
+**Limitation of this evidence:** a single screenshot is not a full device test. It
+confirms the app launches and renders its shell without crashing, and that the home
+grid was empty before the fix — but it does **not** verify app launching, layout
+restore, widget display, orientation changes, error recovery, or frame rates. Those
+remain unverified pending full on-device interaction testing.
+
 ### Not verified (requires device)
 
-- On-device behavior: install, set-as-default-home, app launch, layout restore, widget
-  display, orientation changes, error recovery (device testing pending).
+- On-device behavior beyond the single screenshot: set-as-default-home, app launch,
+  layout restore after the auto-population fix, widget display, orientation changes,
+  error recovery (full interaction testing pending).
+- Whether the auto-populated home grid renders correctly on-device after the `40b7685`
+  fix (not yet re-captured in a screenshot).
 - Actual frame rates / GPU workload (no measurement performed; no FPS claimed).
 
 ## What is explicitly NOT claimed
 
-- No claim that device testing was completed (no device access).
+- No claim that **full** device testing was completed — only a single on-device
+  screenshot (launch + render) has been obtained; interaction testing is pending.
 - No claim of a specific FPS or performance figure.
 - No claim of Apple Live Activities access (the Dynamic Island is an original Android
   interpretation).
