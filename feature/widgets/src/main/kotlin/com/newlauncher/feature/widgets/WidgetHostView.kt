@@ -22,10 +22,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.asPainter
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.graphics.drawable.toPainter
+import androidx.core.graphics.drawable.toBitmap
 import com.newlauncher.core.designsystem.tokens.SemanticColors
 import com.newlauncher.core.designsystem.tokens.SpacingTokens
 
@@ -154,7 +157,15 @@ fun WidgetPicker(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Image(
-                    painter = remember(widget.icon) { widget.icon.toPainter() },
+                    painter = remember(widget.icon) {
+                        try {
+                            widget.icon.toBitmap(width = 144, height = 144)
+                                ?.asImageBitmap()
+                                ?.asPainter()
+                        } catch (_: Exception) {
+                            null
+                        } ?: ColorPainter(Color.Transparent)
+                    },
                     contentDescription = widget.label,
                     modifier = Modifier.size(32.dp),
                 )
