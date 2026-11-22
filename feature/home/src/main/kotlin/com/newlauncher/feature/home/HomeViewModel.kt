@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.newlauncher.core.common.AppInfo
 import com.newlauncher.core.common.AppProvider
+import com.newlauncher.core.storage.AppPlacement
 import com.newlauncher.core.storage.HomeLayout
 import com.newlauncher.core.storage.HomeLayoutFactory
 import com.newlauncher.core.storage.HomePage
@@ -181,7 +182,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         // existing arrangement.
         if (current.pages.all { it.cells.isEmpty() } && current.dock.isEmpty()) {
             val placements = apps.map {
-                HomeLayoutFactory.AppPlacement(it.packageName, it.className, it.label)
+                AppPlacement(it.packageName, it.className, it.label)
             }
             val populated = HomeLayoutFactory.populateEmptyLayout(
                 apps = placements,
