@@ -60,7 +60,7 @@ fun AppIcon(
     } else {
         // Graceful fallback: a drawable that cannot be rasterised must not
         // crash composition. Render an empty box so the cell keeps its size.
-        Box(modifier = modifier, contentAlignment = Alignment.Center)
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {}
     }
 }
 

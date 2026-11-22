@@ -168,7 +168,7 @@ fun WidgetPicker(
                         modifier = Modifier.size(32.dp),
                     )
                 } else {
-                    Box(modifier = Modifier.size(32.dp))
+                    Box(modifier = Modifier.size(32.dp)) {}
                 }
                 Text(
                     text = widget.label,
