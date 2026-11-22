@@ -6,6 +6,14 @@ plugins {
 
 android {
     namespace = "com.newlauncher.feature.home"
+
+    testOptions {
+        unitTests {
+            // Required so Robolectric can access app resources (themes, drawables,
+            // Compose test manifest) when running Compose UI tests on the JVM.
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 dependencies {
@@ -20,4 +28,9 @@ dependencies {
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.bundles.compose)
+
+    testImplementation(libs.bundles.test)
+    testImplementation(libs.bundles.composeTest)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.ext.junit)
 }

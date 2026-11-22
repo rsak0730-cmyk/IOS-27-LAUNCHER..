@@ -48,6 +48,8 @@ import com.newlauncher.core.designsystem.tokens.SpacingTokens
 import com.newlauncher.core.glassengine.GlassPanel
 import com.newlauncher.core.storage.DockSlot
 import com.newlauncher.core.storage.HomeCell
+import com.newlauncher.core.storage.HomeLayout
+import com.newlauncher.core.storage.LauncherSettings
 import kotlin.math.abs
 
 /**
@@ -85,6 +87,52 @@ fun HomeScreen(
         viewModel.ensurePages()
     }
 
+    HomeContent(
+        layout = layout,
+        settings = settings,
+        apps = apps,
+        editMode = editMode,
+        onToggleEdit = viewModel::toggleEditMode,
+        onOpenAppDrawer = onOpenAppDrawer,
+        onOpenSettings = onOpenSettings,
+        onOpenWidgets = onOpenWidgets,
+        onPageChange = viewModel::onPageChange,
+        onLaunch = viewModel::launch,
+        onRemove = viewModel::removeFromPage,
+        onMove = viewModel::moveWithinPage,
+        onMoveToDock = viewModel::moveToDock,
+        onReorderDock = viewModel::reorderDock,
+        islandContent = islandContent,
+    )
+}
+
+/**
+ * Pure presentational home-screen content.
+ *
+ * Takes plain data ([HomeLayout], [LauncherSettings], [AppInfo] list) and
+ * callbacks instead of a [HomeViewModel], so the full home layout — toolbar,
+ * Dynamic Island slot, app-grid pager, page indicators and glass dock — can be
+ * exercised by Compose UI tests without constructing a ViewModel, DataStore or
+ * AppProvider. [HomeScreen] binds a real [HomeViewModel] to this composable.
+ */
+@Composable
+internal fun HomeContent(
+    layout: HomeLayout,
+    settings: LauncherSettings,
+    apps: List<AppInfo>,
+    editMode: Boolean,
+    onToggleEdit: () -> Unit,
+    onOpenAppDrawer: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenWidgets: () -> Unit,
+    onPageChange: (Int) -> Unit,
+    onLaunch: (AppInfo) -> Unit,
+    onRemove: (Int, Int) -> Unit,
+    onMove: (Int, Int, Int) -> Unit,
+    onMoveToDock: (Int, Int) -> Unit,
+    onReorderDock: (Int, Int) -> Unit,
+    islandContent: @Composable () -> Unit,
+) {
     val appByKey = remember(apps) { apps.associateBy { it.key } }
 
     Column(
@@ -105,7 +153,7 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = { viewModel.toggleEditMode() }) {
+            IconButton(onClick = onToggleEdit) {
                 Icon(
                     if (editMode) Icons.Filled.Apps else Icons.Filled.Edit,
                     contentDescription = if (editMode) "Exit edit mode" else "Edit home screen",
@@ -138,7 +186,7 @@ fun HomeScreen(
         // ---- App-grid pager (weight-bound: leaves room for indicator + dock) ----
         val pagerState = rememberPagerState(pageCount = { layout.pages.size.coerceAtLeast(1) })
         LaunchedEffect(pagerState.currentPage) {
-            viewModel.onPageChange(pagerState.currentPage)
+            onPageChange(pagerState.currentPage)
         }
 
         HorizontalPager(state = pagerState, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
@@ -151,10 +199,10 @@ fun HomeScreen(
                 iconSize = settings.appIconSize,
                 spacing = settings.gridSpacing,
                 editMode = editMode,
-                onLaunch = { viewModel.launch(it) },
-                onRemove = { viewModel.removeFromPage(page, it) },
-                onMove = { from, to -> viewModel.moveWithinPage(page, from, to) },
-                onMoveToDock = { viewModel.moveToDock(page, it) },
+                onLaunch = { onLaunch(it) },
+                onRemove = { onRemove(page, it) },
+                onMove = { from, to -> onMove(page, from, to) },
+                onMoveToDock = { onMoveToDock(page, it) },
             )
         }
 
@@ -177,8 +225,8 @@ fun HomeScreen(
                 appByKey = appByKey,
                 iconSize = settings.appIconSize,
                 editMode = editMode,
-                onLaunch = { viewModel.launch(it) },
-                onReorder = { from, to -> viewModel.reorderDock(from, to) },
+                onLaunch = { onLaunch(it) },
+                onReorder = { from, to -> onReorderDock(from, to) },
             )
         }
     }

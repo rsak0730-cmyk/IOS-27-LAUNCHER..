@@ -69,7 +69,7 @@ jobs:
           exit "$status"
 
       - name: Run unit tests
-        run: ./gradlew :app:testDebugUnitTest :core:storage:test :core:common:test :core:designsystem:test :core:glassengine:test :core:graphics:test :core:performance:test --no-daemon --stacktrace 2>&1 | tee tests.log
+        run: ./gradlew :app:testDebugUnitTest :core:storage:test :core:common:test :core:designsystem:test :core:glassengine:test :core:graphics:test :core:performance:test :feature:home:testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee tests.log
 
       - name: Run lint
         run: ./gradlew :app:lintDebug --no-daemon --stacktrace 2>&1 | tee lint.log
